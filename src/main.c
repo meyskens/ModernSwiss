@@ -614,16 +614,19 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
       }
     }
     
+    // Cast angle to int32_t for trig functions (TRIG_MAX_ANGLE = 65536)
+    int32_t angle = (int32_t)second_angle;
+    
     GPoint second_hand = {
-      .x = (int16_t)(sin_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
-      .y = (int16_t)(-cos_lookup(second_angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
+      .x = (int16_t)(sin_lookup(angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(-cos_lookup(angle) * (int32_t)second_hand_length / TRIG_MAX_RATIO) + center.y,
     };
     
     graphics_draw_line(ctx, second_hand, center);
     
     GPoint second_hand_opp = {
-      .x = (int16_t)(-sin_lookup(second_angle) * (int32_t)second_hand_opp_length / TRIG_MAX_RATIO) + center.x,
-      .y = (int16_t)(cos_lookup(second_angle) * (int32_t)second_hand_opp_length / TRIG_MAX_RATIO) + center.y,
+      .x = (int16_t)(-sin_lookup(angle) * (int32_t)second_hand_opp_length / TRIG_MAX_RATIO) + center.x,
+      .y = (int16_t)(cos_lookup(angle) * (int32_t)second_hand_opp_length / TRIG_MAX_RATIO) + center.y,
     };
     
     graphics_draw_line(ctx, second_hand_opp, center);
