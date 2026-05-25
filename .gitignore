@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+waf-*
+.lock-waf*
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Pebble specific
+*.pbw
+*.pbp
+*.resball
+*.pbpack
+*.auto.c
+*.auto.h
+*.ld.auto
