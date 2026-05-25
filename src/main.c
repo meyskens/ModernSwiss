@@ -71,9 +71,31 @@ const GPathInfo HOUR_HAND_POINTS_CHALK = {
   }
 };
 
-// Scaled hand path definitions for large displays (Gabbro 260x260, Emery 200x228)
-// Scale factor: ~1.4x for Emery, ~1.8x for Gabbro relative to 144x168
-const GPathInfo MINUTE_HAND_POINTS_LARGE = {
+// Scaled hand path definitions for Emery (200x228 rectangular)
+// Scale factor: ~1.4x relative to 144x168
+const GPathInfo MINUTE_HAND_POINTS_EMERY = {
+  4,
+  (GPoint []) {
+    { -5, 20 },    // left base (scaled)
+    { 5, 20 },     // right base (scaled)
+    { 4, -88 },    // right tip (shorter for 200x228)
+    { -4, -88 }    // left tip (shorter for 200x228)
+  }
+};
+
+const GPathInfo HOUR_HAND_POINTS_EMERY = {
+  4,
+  (GPoint []) {
+    { -6, 20 },    // left base (scaled)
+    { 6, 20 },     // right base (scaled)
+    { 5, -60 },    // right tip (shorter for 200x228)
+    { -5, -60 }    // left tip (shorter for 200x228)
+  }
+};
+
+// Scaled hand path definitions for Gabbro (260x260 round)
+// Scale factor: ~1.8x relative to 144x168
+const GPathInfo MINUTE_HAND_POINTS_GABBRO = {
   4,
   (GPoint []) {
     { -6, 24 },    // left base (scaled)
@@ -83,7 +105,7 @@ const GPathInfo MINUTE_HAND_POINTS_LARGE = {
   }
 };
 
-const GPathInfo HOUR_HAND_POINTS_LARGE = {
+const GPathInfo HOUR_HAND_POINTS_GABBRO = {
   4,
   (GPoint []) {
     { -7, 24 },    // left base (scaled)
@@ -125,7 +147,8 @@ static Layer *s_bg_color_layer;  // Background color layer for round face on squ
 static GPath *s_minute_arrow, *s_hour_arrow;
 static GPath *s_minute_arrow_round, *s_hour_arrow_round;
 static GPath *s_minute_arrow_chalk, *s_hour_arrow_chalk;
-static GPath *s_minute_arrow_large, *s_hour_arrow_large;
+static GPath *s_minute_arrow_emery, *s_hour_arrow_emery;
+static GPath *s_minute_arrow_gabbro, *s_hour_arrow_gabbro;
 
 static GFont s_res_gothic_18_bold;
 static TextLayer *s_textlayer_date;
@@ -479,10 +502,14 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   // Select appropriate hand paths based on display size and mode
   GPath *hour_path;
   GPath *minute_path;
-  #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
-    // Large displays (Gabbro 260x260, Emery 200x228)
-    hour_path = s_hour_arrow_large;
-    minute_path = s_minute_arrow_large;
+  #if PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260
+    // Gabbro (260x260 round)
+    hour_path = s_hour_arrow_gabbro;
+    minute_path = s_minute_arrow_gabbro;
+  #elif PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228
+    // Emery (200x228 rectangular)
+    hour_path = s_hour_arrow_emery;
+    minute_path = s_minute_arrow_emery;
   #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
     // Chalk (180x180 round) - medium size hands
     hour_path = s_hour_arrow_chalk;
@@ -527,21 +554,35 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
       }
     #endif
 
+    // Scale stroke width based on display size for proper proportions
     #ifdef PBL_COLOR
-      graphics_context_set_stroke_width(ctx, 3);
+      #if PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260
+        graphics_context_set_stroke_width(ctx, 5);  // Thicker for Gabbro
+      #elif PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228
+        graphics_context_set_stroke_width(ctx, 4);  // Thicker for Emery
+      #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
+        graphics_context_set_stroke_width(ctx, 4);  // Thicker for Chalk
+      #else
+        graphics_context_set_stroke_width(ctx, 3);  // Standard for 144x168
+      #endif
     #endif
 
     // Scale second hand based on display size
+    // Basalt (144x168) uses (144/2)-20 = 52px as reference - ends before dial numbers
     int16_t second_hand_length;
     int16_t second_hand_opp_length;
-    #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
-      // Large displays (Gabbro 260x260, Emery 200x228)
-      second_hand_length = 115;  // Scaled to reach near edge
-      second_hand_opp_length = 32;
+    #if PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260
+      // Gabbro (260x260 round) - scale proportionally to basalt
+      second_hand_length = 90;   // Shorter to not overreach dial numbers
+      second_hand_opp_length = 28;
+    #elif PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228
+      // Emery (200x228 rectangular) - scale proportionally to basalt
+      second_hand_length = 70;   // Shorter to not overreach dial numbers
+      second_hand_opp_length = 22;
     #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
       // Chalk (180x180 round)
-      second_hand_length = 79;   // Scaled for 180x180
-      second_hand_opp_length = 24;
+      second_hand_length = 62;   // Scaled proportionally
+      second_hand_opp_length = 20;
     #else
       // Standard displays (144x168)
       bool is_round_mode = (strcmp(settings.dialcolor, "round") == 0);
@@ -577,12 +618,14 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     graphics_draw_line(ctx, second_hand_opp, center);
 
     // Second hand circle - scale based on display size
-    #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
-      graphics_fill_circle(ctx, second_hand, 12);  // Larger circle for large displays
+    #if PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260
+      graphics_fill_circle(ctx, second_hand, 12);  // Largest circle for Gabbro
+    #elif PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228
+      graphics_fill_circle(ctx, second_hand, 10);  // Medium-large circle for Emery
     #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
       graphics_fill_circle(ctx, second_hand, 9);   // Medium circle for Chalk
     #else
-      graphics_fill_circle(ctx, second_hand, 7);     // Standard circle
+      graphics_fill_circle(ctx, second_hand, 7);   // Standard circle
     #endif
     
     // Dot in the middle
@@ -601,12 +644,14 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     #endif
     
     // Center dot - scale based on display size
-    #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
-      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 7);  // Larger for large displays
+    #if PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260
+      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 7);  // Largest for Gabbro
+    #elif PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228
+      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 6);  // Medium-large for Emery
     #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
       graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 5);   // Medium for Chalk
     #else
-      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 4);     // Standard
+      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 4);   // Standard
     #endif
   }
 }
@@ -827,8 +872,10 @@ static void window_unload(Window *window) {
   gpath_destroy(s_hour_arrow_round);
   gpath_destroy(s_minute_arrow_chalk);
   gpath_destroy(s_hour_arrow_chalk);
-  gpath_destroy(s_minute_arrow_large);
-  gpath_destroy(s_hour_arrow_large);
+  gpath_destroy(s_minute_arrow_emery);
+  gpath_destroy(s_hour_arrow_emery);
+  gpath_destroy(s_minute_arrow_gabbro);
+  gpath_destroy(s_hour_arrow_gabbro);
 
   layer_destroy(s_hands_layer);
   text_layer_destroy(s_textlayer_date);
@@ -864,8 +911,10 @@ static void init() {
   s_hour_arrow_round = gpath_create(&HOUR_HAND_POINTS_ROUND);
   s_minute_arrow_chalk = gpath_create(&MINUTE_HAND_POINTS_CHALK);
   s_hour_arrow_chalk = gpath_create(&HOUR_HAND_POINTS_CHALK);
-  s_minute_arrow_large = gpath_create(&MINUTE_HAND_POINTS_LARGE);
-  s_hour_arrow_large = gpath_create(&HOUR_HAND_POINTS_LARGE);
+  s_minute_arrow_emery = gpath_create(&MINUTE_HAND_POINTS_EMERY);
+  s_hour_arrow_emery = gpath_create(&HOUR_HAND_POINTS_EMERY);
+  s_minute_arrow_gabbro = gpath_create(&MINUTE_HAND_POINTS_GABBRO);
+  s_hour_arrow_gabbro = gpath_create(&HOUR_HAND_POINTS_GABBRO);
 
   Layer *window_layer = window_get_root_layer(s_window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -877,8 +926,10 @@ static void init() {
   gpath_move_to(s_hour_arrow_round, center);
   gpath_move_to(s_minute_arrow_chalk, center);
   gpath_move_to(s_hour_arrow_chalk, center);
-  gpath_move_to(s_minute_arrow_large, center);
-  gpath_move_to(s_hour_arrow_large, center);
+  gpath_move_to(s_minute_arrow_emery, center);
+  gpath_move_to(s_hour_arrow_emery, center);
+  gpath_move_to(s_minute_arrow_gabbro, center);
+  gpath_move_to(s_hour_arrow_gabbro, center);
   
   // Subscribe to tick timer
   if (strcmp(settings.secondhandoption, "off") == 0) {
