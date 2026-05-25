@@ -1,21 +1,9 @@
-#include "pebble.h"
-  
-static const GPathInfo MINUTE_HAND_POINTS = {
-  4,
-  (GPoint []) {
-    { -4, 16 },
-    { 6, 16 },
-    { 4, -66 },
-    { -2, -66 }
-  }
-};
+#pragma once
+#include <pebble.h>
 
-static const GPathInfo HOUR_HAND_POINTS = {
-  4,
-  (GPoint []) {
-    { -5, 16 },
-    { 7, 16 },
-    { 5, -45 },
-    { -3, -45 }
-  }
-};
+// Hand path definitions
+extern const GPathInfo MINUTE_HAND_POINTS;
+extern const GPathInfo HOUR_HAND_POINTS;
+
+// Tick handler
+void handle_tick(struct tm *t, TimeUnits units_changed);
