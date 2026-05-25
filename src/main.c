@@ -25,7 +25,7 @@ const GPathInfo HOUR_HAND_POINTS = {
   }
 };
 
-// Scaled hand path definitions for round mode
+// Scaled hand path definitions for round mode (round face on square displays)
 // SVG viewBox is 105x105 with center at (52.5, 52.5)
 // Hour hand: base at y=64.5 (12 below center), tip at y=20.5 (32 above center)
 // Minute hand: base at y=64.5 (12 below center), tip at y=6.5 (46 above center)
@@ -46,6 +46,50 @@ const GPathInfo HOUR_HAND_POINTS_ROUND = {
     { 4, 16 },    // right base
     { 4, -44 },   // right tip
     { -4, -44 }   // left tip
+  }
+};
+
+// Scaled hand path definitions for Chalk (180x180 round)
+// Scale factor: ~1.25x relative to 144x168
+const GPathInfo MINUTE_HAND_POINTS_CHALK = {
+  4,
+  (GPoint []) {
+    { -5, 20 },    // left base (scaled)
+    { 5, 20 },     // right base (scaled)
+    { 4, -79 },    // right tip (scaled for 180x180)
+    { -4, -79 }    // left tip (scaled)
+  }
+};
+
+const GPathInfo HOUR_HAND_POINTS_CHALK = {
+  4,
+  (GPoint []) {
+    { -5, 20 },    // left base (scaled)
+    { 5, 20 },     // right base (scaled)
+    { 5, -55 },    // right tip (scaled for 180x180)
+    { -5, -55 }    // left tip (scaled)
+  }
+};
+
+// Scaled hand path definitions for large displays (Gabbro 260x260, Emery 200x228)
+// Scale factor: ~1.4x for Emery, ~1.8x for Gabbro relative to 144x168
+const GPathInfo MINUTE_HAND_POINTS_LARGE = {
+  4,
+  (GPoint []) {
+    { -6, 24 },    // left base (scaled)
+    { 6, 24 },     // right base (scaled)
+    { 5, -115 },   // right tip (scaled to reach near edge of 260x260)
+    { -5, -115 }   // left tip (scaled)
+  }
+};
+
+const GPathInfo HOUR_HAND_POINTS_LARGE = {
+  4,
+  (GPoint []) {
+    { -7, 24 },    // left base (scaled)
+    { 7, 24 },     // right base (scaled)
+    { 6, -78 },    // right tip (scaled to reach near edge of 260x260)
+    { -6, -78 }    // left tip (scaled)
   }
 };
 
@@ -80,6 +124,8 @@ static Layer *s_bg_color_layer;  // Background color layer for round face on squ
 
 static GPath *s_minute_arrow, *s_hour_arrow;
 static GPath *s_minute_arrow_round, *s_hour_arrow_round;
+static GPath *s_minute_arrow_chalk, *s_hour_arrow_chalk;
+static GPath *s_minute_arrow_large, *s_hour_arrow_large;
 
 static GFont s_res_gothic_18_bold;
 static TextLayer *s_textlayer_date;
@@ -430,9 +476,22 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_color(ctx, GColorWhite);
   }
 
-  // Use scaled hands for round mode
-  GPath *hour_path = is_round_mode ? s_hour_arrow_round : s_hour_arrow;
-  GPath *minute_path = is_round_mode ? s_minute_arrow_round : s_minute_arrow;
+  // Select appropriate hand paths based on display size and mode
+  GPath *hour_path;
+  GPath *minute_path;
+  #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
+    // Large displays (Gabbro 260x260, Emery 200x228)
+    hour_path = s_hour_arrow_large;
+    minute_path = s_minute_arrow_large;
+  #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
+    // Chalk (180x180 round) - medium size hands
+    hour_path = s_hour_arrow_chalk;
+    minute_path = s_minute_arrow_chalk;
+  #else
+    // Standard displays (144x168)
+    hour_path = is_round_mode ? s_hour_arrow_round : s_hour_arrow;
+    minute_path = is_round_mode ? s_minute_arrow_round : s_minute_arrow;
+  #endif
 
   gpath_rotate_to(hour_path, (TRIG_MAX_ANGLE * (((t->tm_hour % 12) * 6) + (t->tm_min / 10))) / (12 * 6));
   gpath_draw_filled(ctx, hour_path);
@@ -740,7 +799,11 @@ static void window_unload(Window *window) {
   gpath_destroy(s_hour_arrow);
   gpath_destroy(s_minute_arrow_round);
   gpath_destroy(s_hour_arrow_round);
-  
+  gpath_destroy(s_minute_arrow_chalk);
+  gpath_destroy(s_hour_arrow_chalk);
+  gpath_destroy(s_minute_arrow_large);
+  gpath_destroy(s_hour_arrow_large);
+
   layer_destroy(s_hands_layer);
   text_layer_destroy(s_textlayer_date);
 }
@@ -773,15 +836,23 @@ static void init() {
   s_hour_arrow = gpath_create(&HOUR_HAND_POINTS);
   s_minute_arrow_round = gpath_create(&MINUTE_HAND_POINTS_ROUND);
   s_hour_arrow_round = gpath_create(&HOUR_HAND_POINTS_ROUND);
+  s_minute_arrow_chalk = gpath_create(&MINUTE_HAND_POINTS_CHALK);
+  s_hour_arrow_chalk = gpath_create(&HOUR_HAND_POINTS_CHALK);
+  s_minute_arrow_large = gpath_create(&MINUTE_HAND_POINTS_LARGE);
+  s_hour_arrow_large = gpath_create(&HOUR_HAND_POINTS_LARGE);
 
   Layer *window_layer = window_get_root_layer(s_window);
   GRect bounds = layer_get_bounds(window_layer);
   GPoint center = grect_center_point(&bounds);
-  
+
   gpath_move_to(s_minute_arrow, center);
   gpath_move_to(s_hour_arrow, center);
   gpath_move_to(s_minute_arrow_round, center);
   gpath_move_to(s_hour_arrow_round, center);
+  gpath_move_to(s_minute_arrow_chalk, center);
+  gpath_move_to(s_hour_arrow_chalk, center);
+  gpath_move_to(s_minute_arrow_large, center);
+  gpath_move_to(s_hour_arrow_large, center);
   
   // Subscribe to tick timer
   if (strcmp(settings.secondhandoption, "off") == 0) {
