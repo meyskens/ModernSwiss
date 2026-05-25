@@ -531,10 +531,23 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
       graphics_context_set_stroke_width(ctx, 3);
     #endif
 
-    // Use shorter second hand for round mode so circle just reaches the stripes
-    bool is_round_mode = (strcmp(settings.dialcolor, "round") == 0);
-    int16_t second_hand_length = is_round_mode ? 42 : (bounds.size.w / 2) - 20;
-    int16_t second_hand_opp_length = is_round_mode ? 16 : 23;
+    // Scale second hand based on display size
+    int16_t second_hand_length;
+    int16_t second_hand_opp_length;
+    #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
+      // Large displays (Gabbro 260x260, Emery 200x228)
+      second_hand_length = 115;  // Scaled to reach near edge
+      second_hand_opp_length = 32;
+    #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
+      // Chalk (180x180 round)
+      second_hand_length = 79;   // Scaled for 180x180
+      second_hand_opp_length = 24;
+    #else
+      // Standard displays (144x168)
+      bool is_round_mode = (strcmp(settings.dialcolor, "round") == 0);
+      second_hand_length = is_round_mode ? 42 : (bounds.size.w / 2) - 20;
+      second_hand_opp_length = is_round_mode ? 16 : 23;
+    #endif
      
     double second_angle = 0;
     
@@ -562,9 +575,15 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     };
     
     graphics_draw_line(ctx, second_hand_opp, center);
-    
-    // Second hand circle
-    graphics_fill_circle(ctx, second_hand, 7);
+
+    // Second hand circle - scale based on display size
+    #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
+      graphics_fill_circle(ctx, second_hand, 12);  // Larger circle for large displays
+    #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
+      graphics_fill_circle(ctx, second_hand, 9);   // Medium circle for Chalk
+    #else
+      graphics_fill_circle(ctx, second_hand, 7);     // Standard circle
+    #endif
     
     // Dot in the middle
     #ifdef PBL_COLOR
@@ -581,7 +600,14 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
       }
     #endif
     
-    graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 4);
+    // Center dot - scale based on display size
+    #if PBL_DISPLAY_WIDTH >= 200 || PBL_DISPLAY_HEIGHT >= 200
+      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 7);  // Larger for large displays
+    #elif PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180
+      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 5);   // Medium for Chalk
+    #else
+      graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, bounds.size.h / 2), 4);     // Standard
+    #endif
   }
 }
 
