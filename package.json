@@ -1,0 +1,126 @@
+{
+  "name": "ModernSwiss",
+  "version": "1.3.0",
+  "description": "ModernSwiss Watchface - SBB style on reborn Pebble",
+  "main": "src/js/app.js",
+  "keywords": [
+    "pebble",
+    "watchface"
+  ],
+  "author": "Maartje Eyskens",
+  "license": "MIT",
+  "dependencies": {
+    "@rebble/clay": "^1.0.10"
+  },
+  "pebble": {
+    "displayName": "ModernSwiss",
+    "uuid": "8c950574-2e93-4dff-97d1-d8fe5cdb9b6c",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint",
+      "gabbro"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": {
+      "DialColor": 0,
+      "SecondHandOption": 1,
+      "DateOption": 2,
+      "HourlyVibration": 3,
+      "BluetoothStatusDetection": 4,
+      "RoundBackgroundColor": 5
+    },
+    "resources": {
+      "media": [
+        {
+          "file": "images/bluetooth-disconnect.png",
+          "name": "IMAGE_BLUETOOTHDISCONNECTED",
+          "type": "png"
+        },
+        {
+          "file": "images/bluetooth-connect.png",
+          "name": "IMAGE_BLUETOOTHCONNECTED",
+          "type": "png"
+        },
+        {
+          "file": "images/resize_icon-mondaine-sbb-black.png",
+          "name": "IMAGE_MONDAINE_BLACKBG",
+          "type": "png"
+        },
+        {
+          "file": "images/resize_icon-mondaine-sbb-white.png",
+          "name": "IMAGE_MONDAINE_WHITEBG",
+          "type": "png"
+        },
+        {
+          "file": "images/resize_icon-mondaine-sbb-black_nl.png",
+          "name": "IMAGE_MONDAINE_BLACKNLBG",
+          "type": "png"
+        },
+        {
+          "file": "images/resize_icon-mondaine-sbb-white_nl.png",
+          "name": "IMAGE_MONDAINE_WHITENLBG",
+          "type": "png"
+        },
+        {
+          "file": "images/sbb-menu-icon.png",
+          "menuIcon": true,
+          "name": "IMAGE_SBB_MENU_ICON",
+          "type": "png"
+        },
+        {
+          "file": "images/sbb-face-round-aplite.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["aplite"]
+        },
+        {
+          "file": "images/sbb-face-round-color.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["basalt"]
+        },
+        {
+          "file": "images/sbb-face-round-chalk.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["chalk"]
+        },
+        {
+          "file": "images/sbb-face-round-diorite.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["diorite"]
+        },
+        {
+          "file": "images/sbb-face-round-emery.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["emery"]
+        },
+        {
+          "file": "images/sbb-face-round-flint.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["flint"]
+        },
+        {
+          "file": "images/sbb-face-round-gabbro.png",
+          "name": "IMAGE_SBB_FACE_ROUND",
+          "type": "png",
+          "targetPlatforms": ["gabbro"]
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}
