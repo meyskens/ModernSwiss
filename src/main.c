@@ -598,9 +598,20 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
     // Stop2go
     else if (strcmp(settings.secondhandoption, "stop2go") == 0) {
       // Move the second hand around the watch in 58 seconds
-      second_angle = TRIG_MAX_ANGLE * 1.03448275862 * (t->tm_sec / 60.0 + time_ms(NULL, NULL) / 60000.0);
-      // Pause the second at 12 o'clock mark
-      second_angle = (second_angle >= TRIG_MAX_ANGLE) ? TRIG_MAX_ANGLE : second_angle;
+      // Get current time with milliseconds for smooth animation
+      time_t sec;
+      uint16_t ms;
+      time_ms(&sec, &ms);
+      struct tm *now = localtime(&sec);
+      
+      if (now->tm_sec < 58) {
+        // Moving phase: hand completes full circle in 58 seconds
+        double fractional_sec = now->tm_sec + ms / 1000.0;
+        second_angle = TRIG_MAX_ANGLE * fractional_sec / 58.0;
+      } else {
+        // Pause at 12 o'clock for 2 seconds
+        second_angle = 0;
+      }
     }
     
     GPoint second_hand = {
