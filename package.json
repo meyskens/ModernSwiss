@@ -1,6 +1,6 @@
 {
   "name": "ModernSwiss",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ModernSwiss Watchface - SBB style on reborn Pebble",
   "main": "src/js/app.js",
   "keywords": [
